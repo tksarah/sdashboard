@@ -117,3 +117,166 @@ pre {
     font-weight: bold;
     margin-bottom: 10px;
 }
+
+/* Responsive Design for Mobile and Tablet */
+@media (max-width: 768px) {
+    body {
+        margin: 10px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+        margin: 10px 0;
+    }
+
+    .top-bar, .wallet-card, .card {
+        padding: 10px;
+        margin-bottom: 15px;
+    }
+
+    .wallet-title {
+        font-size: 1.1rem;
+    }
+
+    .wallet-value {
+        font-size: 1.3rem;
+    }
+
+    .wallet-sub {
+        font-size: 1rem;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .card {
+        resize: none;
+        padding-right: 40px;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    .collapse-btn {
+        top: 5px;
+        right: 8px;
+        font-size: 1.2rem;
+    }
+
+    pre {
+        height: 200px;
+        padding: 8px;
+        font-size: 0.85rem;
+    }
+
+    .block-title {
+        font-size: 1.1rem;
+    }
+
+    .block-number {
+        font-size: 1.5rem;
+        margin-left: 10px;
+        margin-bottom: 15px;
+    }
+
+    .status-line {
+        font-size: 1rem;
+    }
+
+    label {
+        font-size: 0.95rem;
+    }
+
+    select {
+        font-size: 0.9rem;
+        padding: 5px;
+    }
+
+    h2 {
+        font-size: 1.1rem;
+        margin: 5px 0;
+    }
+
+    canvas {
+        max-width: 100% !important;
+        height: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        margin: 5px;
+    }
+
+    h1 {
+        font-size: 1.2rem;
+        margin: 5px 0;
+    }
+
+    .top-bar, .wallet-card, .card {
+        padding: 8px;
+        margin-bottom: 10px;
+    }
+
+    .wallet-title {
+        font-size: 1rem;
+    }
+
+    .wallet-value {
+        font-size: 1.1rem;
+    }
+
+    .wallet-sub {
+        font-size: 0.9rem;
+    }
+
+    .grid {
+        gap: 10px;
+    }
+
+    pre {
+        height: 150px;
+        padding: 5px;
+        font-size: 0.75rem;
+    }
+
+    .block-title {
+        font-size: 0.95rem;
+    }
+
+    .block-number {
+        font-size: 1.2rem;
+        margin-left: 5px;
+    }
+
+    .status-line {
+        font-size: 0.9rem;
+    }
+
+    label {
+        font-size: 0.85rem;
+    }
+
+    select {
+        font-size: 0.8rem;
+        padding: 3px;
+    }
+
+    h2 {
+        font-size: 0.95rem;
+    }
+
+    .sdn-balance #sdnAmount {
+        font-size: 1.2rem;
+    }
+
+    .sdn-balance #sdnUsd,
+    .sdn-balance #sdnJpy {
+        font-size: 0.9rem;
+    }
+}
