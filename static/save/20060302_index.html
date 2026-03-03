@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Shiden Collator Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<style>
+    body {
+        background: #121212;
+        color: #e0e0e0;
+        font-family: "Segoe UI", sans-serif;
+        margin: 20px;
+    }
+    h1 { color: #fff; }
+
+    .top-bar {
+        background: #1e1e1e;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border: 1px solid #333;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    .status-line {
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .wallet-card {
+        background: #1e1e1e;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        border: 1px solid #333;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    .wallet-title {
+        font-size: 1.4rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .wallet-value {
+        font-size: 1.6rem;
+        font-weight: bold;
+        color: #4bc0c0;
+        margin-bottom: 5px;
+    }
+
+    .wallet-sub {
+        font-size: 1.2rem;
+        margin-bottom: 5px;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .card {
+        background: #1e1e1e;
+        padding: 20px;
+        border-radius: 10px;
+        cursor: move;
+        resize: both;
+        overflow: auto;
+        border: 1px solid #333;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        position: relative;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 14px rgba(0,0,0,0.6);
+    }
+
+    .collapse-btn {
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        cursor: pointer;
+        font-size: 1.4rem;
+        color: #bbb;
+    }
+
+    .collapsed .card-content {
+        display: none;
+    }
+
+    pre {
+        background: #0d0d0d;
+        padding: 10px;
+        border-radius: 10px;
+        height: 300px;
+        overflow-y: scroll;
+        border: 1px solid #333;
+    }
+
+    .block-title {
+        font-size: 1.4rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .block-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #4bc0c0;
+        margin-left: 20px;
+        margin-bottom: 20px;
+    }
+
+    .green { color: #4caf50; font-weight: bold; }
+    .red { color: #ff5252; font-weight: bold; }
+</style>
+</head>
+
+<body>
+
+<h1>Shiden Collator Dashboard</h1>
+
+<div class="top-bar">
+    <div class="status-line" id="collatorStatusText">Collator 状態: 読み込み中...</div>
+
+    <label>更新間隔:
+        <select id="refreshSelect">
+            <option value="1">1秒</option>
+            <option value="5">5秒</option>
+            <option value="10">10秒</option>
+            <option value="30">30秒</option>
+            <option value="60">60秒</option>
+        </select>
+    </label>
+</div>
+
+<div class="wallet-card">
+    <div class="wallet-title">SDN 残高（ウォレット）</div>
+    <div class="wallet-value" id="sdnBalance">読み込み中...</div>
+    <div class="wallet-sub" id="sdnUsd"></div>
+    <div class="wallet-sub" id="sdnJpy"></div>
+</div>
+
+<div class="grid" id="dashboardGrid">
+
+    <div class="card" data-id="cpu-history">
+        <div class="collapse-btn" onclick="toggleCard(this)">−</div>
+        <div class="card-content">
+            <h2>CPU 使用率（履歴）</h2>
+            <p id="cpuTotalText" style="font-size:1.4rem; font-weight:bold;"></p>
+            <canvas id="cpuLineChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card" data-id="cpu-core">
+        <div class="collapse-btn" onclick="toggleCard(this)">−</div>
+        <div class="card-content">
+            <h2>CPU コア別使用率</h2>
+            <canvas id="cpuCoreChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card" data-id="memory">
+        <div class="collapse-btn" onclick="toggleCard(this)">−</div>
+        <div class="card-content">
+            <h2>メモリ使用量</h2>
+            <p id="memoryText" style="font-size:1.2rem; font-weight:bold;"></p>
+            <canvas id="memChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card" data-id="disk">
+        <div class="collapse-btn" onclick="toggleCard(this)">−</div>
+        <div class="card-content">
+            <h2>ディスク使用量 (/var/lib/astar)</h2>
+            <p id="diskText" style="font-size:1.2rem; font-weight:bold;"></p>
+            <canvas id="diskChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card" data-id="network">
+        <div class="collapse-btn" onclick="toggleCard(this)">−</div>
+        <div class="card-content">
+            <h2>ネットワーク I/O</h2>
+            <canvas id="netChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card" data-id="blocks">
+        <div class="collapse-btn" onclick="toggleCard(this)">−</div>
+        <div class="card-content">
+            <h2>ブロック情報</h2>
+
+            <div class="block-title">Best Block:</div>
+            <div class="block-number" id="bestBlock"></div>
+
+            <div class="block-title">Finalized Block:</div>
+            <div class="block-number" id="finalizedBlock"></div>
+
+            <p id="sync"></p>
+        </div>
+    </div>
+
+</div>
+
+<div class="card" style="margin-top:40px;">
+    <div class="collapse-btn" onclick="toggleCard(this)">−</div>
+    <div class="card-content">
+        <h2>astar.service ログ（継続表示）</h2>
+        <pre id="logs"></pre>
+    </div>
+</div>
+
+<script>
+function toggleCard(btn) {
+    const card = btn.parentElement;
+    card.classList.toggle("collapsed");
+    btn.textContent = card.classList.contains("collapsed") ? "＋" : "−";
+    saveCollapseState();
+}
+
+function saveCollapseState() {
+    const states = {};
+    document.querySelectorAll(".card").forEach(card => {
+        states[card.dataset.id] = card.classList.contains("collapsed");
+    });
+    localStorage.setItem("collapseStates", JSON.stringify(states));
+}
+
+function loadCollapseState() {
+    const saved = localStorage.getItem("collapseStates");
+    if (!saved) return;
+
+    const states = JSON.parse(saved);
+    document.querySelectorAll(".card").forEach(card => {
+        if (states[card.dataset.id]) {
+            card.classList.add("collapsed");
+            card.querySelector(".collapse-btn").textContent = "＋";
+        }
+    });
+}
+
+const grid = document.getElementById("dashboardGrid");
+
+function saveOrder() {
+    const order = [...grid.children].map(card => card.dataset.id);
+    localStorage.setItem("dashboardOrder", JSON.stringify(order));
+}
+
+function loadOrder() {
+    const saved = localStorage.getItem("dashboardOrder");
+    if (!saved) return;
+
+    const order = JSON.parse(saved);
+    const cards = [...grid.children];
+
+    order.forEach(id => {
+        const card = cards.find(c => c.dataset.id === id);
+        if (card) grid.appendChild(card);
+    });
+}
+
+new Sortable(grid, {
+    animation: 150,
+    ghostClass: "sortable-ghost",
+    onEnd: saveOrder
+});
+
+loadOrder();
+loadCollapseState();
+
+let refreshInterval = null;
+
+function startAutoRefresh(seconds) {
+    if (refreshInterval) clearInterval(refreshInterval);
+    refreshInterval = setInterval(loadStatus, seconds * 1000);
+}
+
+const refreshSelect = document.getElementById("refreshSelect");
+
+refreshSelect.addEventListener("change", () => {
+    const sec = Number(refreshSelect.value);
+    localStorage.setItem("refreshInterval", sec);
+    startAutoRefresh(sec);
+});
+
+window.onload = () => {
+    const saved = localStorage.getItem("refreshInterval");
+    const interval = saved ? Number(saved) : 10;
+    refreshSelect.value = interval;
+    startAutoRefresh(interval);
+
+    loadSDN();  // SDN 残高はページ読み込み時のみ取得
+};
+
+async function loadSDN() {
+    const res = await fetch("/api/sdn_balance");
+    const data = await res.json();
+
+    if (data.sdn_balance != null) {
+
+        // SDN：小数2桁、カンマ付き
+        const bal = Number(data.sdn_balance.toFixed(2)).toLocaleString();
+
+        // USD：小数2桁、カンマ付き
+        const usd = (data.sdn_value_usd !== null && data.sdn_value_usd !== undefined)
+            ? Number(data.sdn_value_usd.toFixed(2)).toLocaleString()
+            : "-";
+
+        // 円：整数、カンマ付き
+        const jpy = (data.sdn_value_jpy !== null && data.sdn_value_jpy !== undefined)
+            ? Number(data.sdn_value_jpy.toFixed(0)).toLocaleString()
+            : "-";
+
+        document.getElementById("sdnBalance").innerText =
+            `${bal} SDN / $${usd} / ${jpy} 円`;
+
+    } else {
+        document.getElementById("sdnBalance").innerText = "取得失敗";
+    }
+}
+
+let cpuHistory = [];
+let netHistorySent = [];
+let netHistoryRecv = [];
+let lastNet = null;
+
+async function loadStatus() {
+    const res = await fetch("/api/status");
+    const data = await res.json();
+
+    if (data.collator_alive) {
+        document.getElementById("collatorStatusText").innerHTML =
+            `Collator 状態: <span class="green">正常</span>`;
+    } else {
+        document.getElementById("collatorStatusText").innerHTML =
+            `Collator 状態: <span class="red">停止</span>`;
+    }
+
+    document.getElementById("cpuTotalText").innerText =
+        `CPU 使用率: ${data.cpu_total}%`;
+
+    cpuHistory.push(data.cpu_total);
+    if (cpuHistory.length > 20) cpuHistory.shift();
+
+    cpuLineChart.data.datasets[0].data = cpuHistory;
+    cpuLineChart.update();
+
+    const cores = data.cpu_per_core;
+    cpuCoreChart.data.labels = cores.map((_, i) => `Core ${i}`);
+    cpuCoreChart.data.datasets[0].data = cores;
+    cpuCoreChart.update();
+
+    const memUsed = (data.memory.used / 1024 / 1024 / 1024).toFixed(2);
+    const memTotal = (data.memory.total / 1024 / 1024 / 1024).toFixed(2);
+
+    document.getElementById("memoryText").innerText =
+        `${memUsed} GB / ${memTotal} GB`;
+
+    memChart.data.datasets[0].data = [memUsed, memTotal - memUsed];
+    memChart.update();
+
+    const diskUsed = (data.disk.used / 1024 / 1024 / 1024).toFixed(2);
+    const diskTotal = (data.disk.total / 1024 / 1024 / 1024).toFixed(2);
+
+    document.getElementById("diskText").innerText =
+        `${diskUsed} GB / ${diskTotal} GB`;
+
+    diskChart.data.datasets[0].data = [diskUsed, diskTotal - diskUsed];
+    diskChart.update();
+
+    if (lastNet) {
+        const sentDiff = (data.network.bytes_sent - lastNet.bytes_sent) / 1024;
+        const recvDiff = (data.network.bytes_recv - lastNet.bytes_recv) / 1024;
+
+        netHistorySent.push(sentDiff);
+        netHistoryRecv.push(recvDiff);
+
+        if (netHistorySent.length > 20) netHistorySent.shift();
+        if (netHistoryRecv.length > 20) netHistoryRecv.shift();
+
+        netChart.data.datasets[0].data = netHistorySent;
+        netChart.data.datasets[1].data = netHistoryRecv;
+        netChart.update();
+    }
+    lastNet = data.network;
+
+    document.getElementById("bestBlock").innerText = data.best_block;
+    document.getElementById("finalizedBlock").innerText = data.finalized_block;
+
+    const diff = data.sync_diff;
+    const diffClass = diff <= 2 ? "green" : "red";
+
+    document.getElementById("sync").innerHTML =
+        `遅延: <span class="${diffClass}">${diff}</span> blocks<br>` +
+        `同期率: ${data.sync_rate}%`;
+
+    document.getElementById("logs").innerText =
+        data.logs.join("\n");
+}
+
+const cpuLineChart = new Chart(
+    document.getElementById("cpuLineChart"),
+    {
+        type: 'line',
+        data: {
+            labels: Array(20).fill(""),
+            datasets: [{
+                label: "CPU %",
+                data: [],
+                borderColor: "#4bc0c0",
+                fill: false,
+                tension: 0.2
+            }]
+        }
+    }
+);
+
+const cpuCoreChart = new Chart(
+    document.getElementById("cpuCoreChart"),
+    {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: "CPU %",
+                data: [],
+                backgroundColor: "rgba(75, 192, 192, 0.6)"
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            scales: {
+                x: { min: 0, max: 100 }
+            }
+        }
+    }
+);
+
+const memChart = new Chart(
+    document.getElementById("memChart"),
+    {
+        type: 'doughnut',
+        data: {
+            labels: ["使用中 (GB)", "空き (GB)"],
+            datasets: [{
+                data: [0, 0],
+                backgroundColor: ["#ff6384", "#36a2eb"]
+            }]
+        }
+    }
+);
+
+const diskChart = new Chart(
+    document.getElementById("diskChart"),
+    {
+        type: 'doughnut',
+        data: {
+            labels: ["使用中 (GB)", "空き (GB)"],
+            datasets: [{
+                data: [0, 0],
+                backgroundColor: ["#ff6384", "#36a2eb"]
+            }]
+        }
+    }
+);
+
+const netChart = new Chart(
+    document.getElementById("netChart"),
+    {
+        type: 'line',
+        data: {
+            labels: Array(20).fill(""),
+            datasets: [
+                {
+                    label: "送信 KB/s",
+                    data: [],
+                    borderColor: "#ff6384",
+                    fill: false
+                },
+                {
+                    label: "受信 KB/s",
+                    data: [],
+                    borderColor: "#36a2eb",
+                    fill: false
+                }
+            ]
+        }
+    }
+);
+
+loadStatus();
+</script>
+
+</body>
+</html>
+
