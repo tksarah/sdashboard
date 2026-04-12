@@ -1,6 +1,12 @@
 # SDashboard
 
-SDashboardは、シンプルかつモダンなダッシュボードWebアプリケーションです。
+Shiden Collator Node ローカルでの状態確認のためのダッシュボード
+
+# サンプル画像
+<img width="1330" height="928" alt="スクリーンショット 2026-04-13 010323" src="https://github.com/user-attachments/assets/d71c5a54-ad05-40d8-a775-4cc699da0ef5" />
+<img width="1326" height="1068" alt="スクリーンショット 2026-04-13 010340" src="https://github.com/user-attachments/assets/e89f8edc-2036-404b-bf62-68948d77a5fd" />
+
+
 
 ## 構成
 
